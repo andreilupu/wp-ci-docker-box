@@ -1,4 +1,5 @@
-FROM wordpress:cli-php7.2
+# FROM wordpress:cli-php7.2
+FROM circleci/php:7.1-jessie-node-browsers
 
 WORKDIR /tmp/
 
@@ -25,35 +26,34 @@ RUN /usr/local/bin/phpcs --config-set show_progress 1 && \
     /usr/local/bin/phpcs --config-set encoding utf-8
 
 ### If we are ditching wpcli image we need this:
-# RUN curl -o /bin/wp-cli.phar https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
-# RUN chmod +x /bin/wp-cli.phar /bin/wp
+RUN curl -o /bin/wp-cli.phar https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+COPY wp-su.sh /bin/wp
+RUN chmod +x /bin/wp-cli.phar /bin/wp
 
 ### At some point we should return to the base user, but not now yet.
 # USER www-data
 
 ### Install deps
-RUN apk update \
-    && apk add --no-cache git mysql-client curl libmcrypt libmcrypt-dev openssh \
-    libxml2-dev freetype-dev libpng-dev libjpeg-turbo-dev g++ make autoconf \
-    && apk add rsync \
-    # && docker-php-source extract \
-    && pecl install xdebug redis \
-    # && docker-php-ext-enable xdebug redis \
-    # && docker-php-source delete \
-    # && docker-php-ext-install mcrypt pdo_mysql soap \
-    # && echo "xdebug.remote_enable=on" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-    # && echo "xdebug.remote_autostart=off" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-    # && echo "xdebug.remote_port=9000" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-    # && echo "xdebug.remote_handler=dbgp" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-    # && echo "xdebug.remote_connect_back=0" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-    && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# RUN apk update \
+#     && apk add --no-cache git openssh bash curl docker python2 py2-pip mysql-client libmcrypt libmcrypt-dev \
+#     libxml2-dev freetype-dev libpng-dev libjpeg-turbo-dev g++ make autoconf \
+#     && apk add rsync \
+#     # && docker-php-source extract \
+#     # && pecl install xdebug redis \
+#     # && docker-php-ext-enable xdebug redis \
+#     # && docker-php-source delete \
+#     # && docker-php-ext-install mcrypt pdo_mysql soap \
+#     # && echo "xdebug.remote_enable=on" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+#     # && echo "xdebug.remote_autostart=off" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+#     # && echo "xdebug.remote_port=9000" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+#     # && echo "xdebug.remote_handler=dbgp" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+#     # && echo "xdebug.remote_connect_back=0" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+    # && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
     # && rm -rf /tmp/*
 
 ### Now that we have composer, let's add WPCS
 RUN composer create-project wp-coding-standards/wpcs:dev-master --no-interaction --no-dev /var/lib/wpcs
 
 RUN /usr/local/bin/phpcs --config-set installed_paths /var/lib/wpcs
-
-#RUN /tmp/phpcs/bin/phpcs  -p /tmp/src/index.php --standard=WordPress;
 
 EXPOSE 9000
