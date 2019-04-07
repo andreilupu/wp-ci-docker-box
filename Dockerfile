@@ -1,4 +1,5 @@
 # FROM wordpress:cli-php7.2
+# let's use a circleci based image so we can have a faster checkout in workflows
 FROM circleci/php:7.1-jessie-node-browsers
 
 WORKDIR /tmp/
